@@ -87,7 +87,7 @@ class IPAddrScanner(object):
             self.task.start()
 
     def do_update(self):
-        commands.getstatusoutput("arp -da")
+        commands.getstatusoutput("arp -n|awk '/^[1-9]/{print \"arp -d  \" $1}'|sh")
         self.is_updating = True
         commands.getstatusoutput("nmap -sn --max-retries 0 --max-rtt-timeout 25ms %s" % self.net_seg)
         status, output = commands.getstatusoutput("arp -an| grep -v incomplete | awk -F' ' '{print $2\" \"$4}'")
