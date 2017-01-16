@@ -13,7 +13,16 @@ class MacAddr(object):
     def __init__(self, mac):
         self.mac_digit = []
         if isinstance(mac, basestring):
-            pattern = re.compile(r"([\da-fA-F]+):([\da-fA-F]+):([\da-fA-F]+):([\da-fA-F]+):([\da-fA-F]+):([\da-fA-F]+)")
+            element = r"([\da-fA-F]{1,2})"
+            pattern_element = [element for i in range(6)]
+            if mac.__contains__(":"):
+                splitter = ":"
+            elif mac.__contains__("-"):
+                splitter = "-"
+            else:
+                splitter = ""
+
+            pattern = re.compile(splitter.join(pattern_element))
             mr = pattern.match(mac)
             if mr is None:
                 raise ValueError
@@ -120,7 +129,7 @@ class IPAddrScanner(object):
 
     def get_rpc_query_addr_result(self, macaddr):
         try:
-            return {"result": self.mac_to_ip[MacAddr(macaddr)]}
+            return {"result": {k: format_timestamp(v) for k, v in self.mac_to_ip[MacAddr(macaddr)].items()}}
         except KeyError or ValueError:
             return {"result": {}}
 
