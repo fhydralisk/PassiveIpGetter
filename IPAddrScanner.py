@@ -64,8 +64,8 @@ class IPAddrScanner(object):
         while True:
             if self.tick <= 0:
                 result = self.do_update()
-                self.combine_result(result)
                 self.last_update = int(time.time())
+                self.combine_result(result)
                 self.tick = self.interval * 60
             else:
                 self.tick -= 1
@@ -80,7 +80,7 @@ class IPAddrScanner(object):
     def do_update(self):
         commands.getstatusoutput("arp -da")
         self.is_updating = True
-        commands.getstatusoutput("nmap -sn --max-retries 0 --max-rtt-timeout 25ms %s %s" % self.net_seg)
+        commands.getstatusoutput("nmap -sn --max-retries 0 --max-rtt-timeout 25ms %s" % self.net_seg)
         status, output = commands.getstatusoutput("arp -an| grep -v incomplete | awk -F' ' '{print $2\" \"$4}'")
         self.is_updating = False
         return self.parse_arp_output(output)
@@ -109,7 +109,7 @@ class IPAddrScanner(object):
             if mac not in self.mac_to_ip:
                 self.mac_to_ip[mac] = {}
             for ip in ips:
-                self.mac_to_ip[mac][ip] = time.time()
+                self.mac_to_ip[mac][ip] = self.last_update
         for mac, ip_dict in self.mac_to_ip.items():
             for ip, last_upd in ip_dict.items():
                 if self.last_update - last_upd > 240 * self.interval:

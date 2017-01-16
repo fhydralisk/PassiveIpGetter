@@ -131,7 +131,7 @@ def deamon():
     os.dup2(so.fileno(), sys.stdout.fileno())
     os.dup2(serr.fileno(), sys.stderr.fileno())
 
-if len(sys.argv) != 4:
+if len(sys.argv) != 5:
     print_usage()
     exit(1)
 
