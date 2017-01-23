@@ -56,9 +56,10 @@ class MacAddr(object):
 
 
 class IPAddrScanner(object):
-    def __init__(self, interval, net_seg):
+    def __init__(self, interval, net_seg, fallback_user):
         self.interval = interval
         self.net_seg = net_seg
+        self.fallback_user = fallback_user
         '''
         mac_to_ip:
         mac_addr : {IP: last_update}
@@ -88,9 +89,20 @@ class IPAddrScanner(object):
 
     def do_update(self):
         self.is_updating = True
-        status, output = commands.getstatusoutput("nmap -sn %s" % self.net_seg)
+        commands.getstatusoutput("arp -n|awk '/^[1-9]/{print \"arp -d  \" $1}'|sh")
+        status, output_nmap = commands.getstatusoutput('su - %s -c "nmap -sn %s"' % (self.fallback_user, self.net_seg))
+        status, output_arp = commands.getstatusoutput("arp -an| grep -v incomplete | awk -F' ' '{print $2\" \"$4}'")
         self.is_updating = False
-        return self.parse_nmap_output(output)
+        nmap_output = self.parse_nmap_output(output_nmap)
+        arp_output = self.parse_arp_output(output_arp)
+        final_output = nmap_output
+        for arp_entry in arp_output:
+            if arp_entry in final_output:
+                final_output[arp_entry].union(arp_output[arp_entry])
+            else:
+                final_output[arp_entry] = arp_output[arp_entry]
+
+        return final_output
 
     def do_update_now(self):
         self.tick = 0
@@ -107,8 +119,8 @@ class IPAddrScanner(object):
                 mac_str = mr.group(2)
                 mac = MacAddr(mac_str)
                 if mac not in mac_to_ip:
-                    mac_to_ip[MacAddr(mac_str)] = []
-                mac_to_ip[MacAddr(mac_str)].append(ip_str)
+                    mac_to_ip[MacAddr(mac_str)] = set([])
+                mac_to_ip[MacAddr(mac_str)].add(ip_str)
         return mac_to_ip
     
     @staticmethod
@@ -125,8 +137,8 @@ class IPAddrScanner(object):
                 mac_str = mr.group(2)
                 mac = MacAddr(mac_str)
                 if mac not in mac_to_ip:
-                    mac_to_ip[MacAddr(mac_str)] = []
-                mac_to_ip[MacAddr(mac_str)].append(ip_str)
+                    mac_to_ip[MacAddr(mac_str)] = set([])
+                mac_to_ip[MacAddr(mac_str)].add(ip_str)
 
         return mac_to_ip
 

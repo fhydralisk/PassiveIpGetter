@@ -11,7 +11,7 @@ from Hslog import hs_log
 
 def print_usage():
     print "Usage:"
-    print "PassiveIpGetter.py <RPCPort> <ScanInterval-min> <NetSegmentToScan> <Daemon>"
+    print "PassiveIpGetter.py <RPCPort> <ScanInterval-min> <NetSegmentToScan> <UserToFallback> <Daemon>"
 
 
 class HostnameServer(HTTPServer):
@@ -131,18 +131,19 @@ def deamon():
     os.dup2(so.fileno(), sys.stdout.fileno())
     os.dup2(serr.fileno(), sys.stderr.fileno())
 
-if len(sys.argv) != 5:
+if len(sys.argv) != 6:
     print_usage()
     exit(1)
 
 rpcport = int(sys.argv[1])
 interval = int(sys.argv[2])
 net_seg = sys.argv[3]
-daemonlize = sys.argv[4]
+fallback_user = sys.argv[4]
+daemonlize = sys.argv[5]
 if daemonlize.upper() == "TRUE" or daemonlize.upper() == "YES" or daemonlize == "1":
     deamon()
 
-scanner = IPAddrScanner(interval=interval, net_seg=net_seg)
+scanner = IPAddrScanner(interval=interval, net_seg=net_seg, fallback_user=fallback_user)
 hostServer = HostnameServer(scanner, ('', rpcport), HostnameRequestHandler)
 hs_log("Starting PassiveIpGetter...")
 try:
