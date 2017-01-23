@@ -35,14 +35,24 @@ class HostnameServer(HTTPServer):
 
         return False
 
+    @staticmethod
+    def json_pretty_print(obj):
+        return json.dumps(obj, sort_keys=True, indent=4, separators=(',', ': '))
+
     def get_status_json(self):
-        return json.dumps(self.scanner.get_rpc_query_status_result(), sort_keys=True, indent=4, separators=(',', ': '))
+        return self.json_pretty_print(self.scanner.get_rpc_query_status_result())
 
     def get_ip_of_mac_json(self, mac_addr):
-        return json.dumps(self.scanner.get_rpc_query_addr_result(mac_addr), sort_keys=True, indent=4, separators=(',', ': '))
+        return self.json_pretty_print(self.scanner.get_rpc_query_addr_result(mac_addr))
 
     def get_arp_table_json(self):
-        return json.dumps(self.scanner.get_rpc_query_arp_list(), sort_keys=True, indent=4, separators=(',', ': '))
+        return self.json_pretty_print(self.scanner.get_rpc_query_arp_list())
+
+    def get_ip_for_mac(self, ip_addr):
+        return self.json_pretty_print(self.scanner.get_rpc_query_ip_for_mac(ip_addr))
+
+    def do_wol(self, mac_addr):
+        return self.json_pretty_print(self.scanner.rpc_wol_mac(mac_addr))
 
 
 class HostnameRequestHandler(BaseHTTPRequestHandler):
@@ -97,8 +107,10 @@ class HostnameRequestHandler(BaseHTTPRequestHandler):
                 self.write_common_header(content_type="application/json")
                 self.wfile.write(self.server.get_ip_of_mac_json(mac_addr))
             elif p2 == "state.look":
-                if self.auth(code_succeed=200, content_type_succeed="application/json"):
-                    self.wfile.write(self.server.get_status_json())
+                # if self.auth(code_succeed=200, content_type_succeed="application/json"):
+                #    self.wfile.write(self.server.get_status_json())
+                self.write_common_header(content_type="application/json")
+                self.wfile.write(self.server.get_status_json())
             elif p2 == "arp_table.look":
                 if self.auth(code_succeed=200, content_type_succeed="application/json"):
                     self.wfile.write(self.server.get_arp_table_json())
@@ -106,6 +118,14 @@ class HostnameRequestHandler(BaseHTTPRequestHandler):
                 if self.auth(code_succeed=200, content_type_succeed="application/json"):
                     self.server.handle_scan_now_command()
                     self.wfile.write(json.dumps({"result": "OK"}))
+            elif p2.startswith("wol.do?mac="):
+                mac_addr = p2.replace("wol.do?mac=", "")
+                self.write_common_header(content_type="application/json")
+                self.wfile.write(self.server.do_wol(mac_addr))
+            elif p2.startswith("?ip="):
+                ip_addr = p2.replace("?ip=")
+                self.write_common_header(content_type="application/json")
+                self.wfile.write(self.server.get_ip_for_mac(ip_addr))
             else:
                 self.send_error(404)
 

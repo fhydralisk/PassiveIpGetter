@@ -171,3 +171,18 @@ class IPAddrScanner(object):
 
     def get_rpc_query_arp_list(self):
         return {str(k): v for k, v in self.mac_to_ip.items()}
+
+    def get_rpc_query_ip_for_mac(self, ipaddr):
+        for mac, ips in self.mac_to_ip.items():
+            if ipaddr in ips:
+                return {"result": {"mac": str(mac)}}
+
+        return {"result": {}}
+
+    @staticmethod
+    def rpc_wol_mac(macaddr):
+        from WOLSender import run as wol_send
+        if wol_send(macaddr):
+            return {"result": "OK"}
+        else:
+            return {"result": "Fail"}
