@@ -87,12 +87,10 @@ class IPAddrScanner(object):
             self.task.start()
 
     def do_update(self):
-        commands.getstatusoutput("arp -n|awk '/^[1-9]/{print \"arp -d  \" $1}'|sh")
         self.is_updating = True
-        commands.getstatusoutput("nmap -sn --max-retries 0 --max-rtt-timeout 25ms %s" % self.net_seg)
-        status, output = commands.getstatusoutput("arp -an| grep -v incomplete | awk -F' ' '{print $2\" \"$4}'")
+        status, output = commands.getstatusoutput("nmap -sn %s" % self.net_seg)
         self.is_updating = False
-        return self.parse_arp_output(output)
+        return self.parse_nmap_output(output)
 
     def do_update_now(self):
         self.tick = 0
@@ -111,6 +109,25 @@ class IPAddrScanner(object):
                 if mac not in mac_to_ip:
                     mac_to_ip[MacAddr(mac_str)] = []
                 mac_to_ip[MacAddr(mac_str)].append(ip_str)
+        return mac_to_ip
+    
+    @staticmethod
+    def parse_nmap_output(output):
+        mac_to_ip = {}
+        sgs = output.split('Nmap scan report for ')
+        pattern = re.compile(
+                r'(?#ip address)((?:\d{1,3}\.){3}\d{1,3})\n.*\nMAC Address: (?#mac address)((?:[\da-fA-F]{2}:){5}[\da-fA-F]).*\n'
+            )
+        for sg in sgs:
+            mr = pattern.match(sg)
+            if mr is not None:
+                ip_str = mr.group(1)
+                mac_str = mr.group(2)
+                mac = MacAddr(mac_str)
+                if mac not in mac_to_ip:
+                    mac_to_ip[MacAddr(mac_str)] = []
+                mac_to_ip[MacAddr(mac_str)].append(ip_str)
+
         return mac_to_ip
 
     def combine_result(self, new_result):
