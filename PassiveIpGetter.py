@@ -123,7 +123,7 @@ class HostnameRequestHandler(BaseHTTPRequestHandler):
                 self.write_common_header(content_type="application/json")
                 self.wfile.write(self.server.do_wol(mac_addr))
             elif p2.startswith("?ip="):
-                ip_addr = p2.replace("?ip=")
+                ip_addr = p2.replace("?ip=", "")
                 self.write_common_header(content_type="application/json")
                 self.wfile.write(self.server.get_ip_for_mac(ip_addr))
             else:
