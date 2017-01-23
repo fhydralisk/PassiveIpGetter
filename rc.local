@@ -11,10 +11,9 @@
 #
 # By default this script does nothing.
 
-REGSRV=/opt/scripts/HostnameReg.py
-PY=/usr/bin/python
-VNAME=xsrubuntu
-RHOST=fi.ee.tsinghua.edu.cn:8123
-REPORTI=300
-[ -f $REGSRV ] && $PY $REGSRV $VNAME $RHOST $REPORTI YES
+sysctl -w net.ipv4.neigh.default.gc_thresh1=512
+sysctl -w net.ipv4.neigh.default.gc_thresh2=2048
+sysctl -w net.ipv4.neigh.default.gc_thresh3=4096
+sysctl -w net.ipv4.neigh.default.gc_stale_time=240
+python /home/odl/gits/PassiveIpGetter/PassiveIpGetter.py 8111 10 166.111.64.0/22 odl YES
 exit 0
