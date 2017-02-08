@@ -56,6 +56,8 @@ class MacAddr(object):
 
 
 class IPAddrScanner(object):
+    OMIT_FACTOR = 1.1
+
     def __init__(self, interval, net_seg, fallback_user):
         self.interval = interval
         self.net_seg = net_seg
@@ -150,8 +152,13 @@ class IPAddrScanner(object):
                 self.mac_to_ip[mac][ip] = self.last_update
         for mac, ip_dict in self.mac_to_ip.items():
             for ip, last_upd in ip_dict.items():
-                if self.last_update - last_upd > 240 * self.interval:
+                if self.last_update - last_upd > 60 * self.OMIT_FACTOR * self.interval:
                     del self.mac_to_ip[mac][ip]
+            if len(ip_dict) == 2:
+                # delete oldest
+                items = ip_dict.items()
+                if items[0][1] != items[1][1]:
+                    del self.mac_to_ip[mac][min(items, key=lambda x:x[1])[0]]
 
             if len(self.mac_to_ip[mac]) == 0:
                 del self.mac_to_ip[mac]
