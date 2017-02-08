@@ -166,6 +166,7 @@ class IPAddrScanner(object):
         return {
             "Last_update": format_timestamp(self.last_update),
             "Next_update": format_timestamp(self.last_update + self.interval * 60),
+            "Time_left": self.tick,
             "Is_updating": self.is_updating
         }
 
