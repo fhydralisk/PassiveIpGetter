@@ -166,7 +166,7 @@ class IPAddrScanner(object):
     def get_rpc_query_addr_result(self, macaddr):
         try:
             return {"result": {k: format_timestamp(v) for k, v in self.mac_to_ip[MacAddr(macaddr)].items()}}
-        except KeyError or ValueError:
+        except (KeyError, ValueError):
             return {"result": {}}
 
     def get_rpc_query_status_result(self):
