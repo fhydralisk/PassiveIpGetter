@@ -117,7 +117,7 @@ class HostnameRequestHandler(BaseHTTPRequestHandler):
             elif p2 == "scan_now.do":
                 if self.auth(code_succeed=200, content_type_succeed="application/json"):
                     self.server.handle_scan_now_command()
-                    self.wfile.write(json.dumps({"result": "OK"}))
+                    self.wfile.write(json.dumps({"Result": "OK"}))
             elif p2.startswith("wol.do?mac="):
                 mac_addr = p2.replace("wol.do?mac=", "")
                 self.write_common_header(content_type="application/json")

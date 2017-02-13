@@ -163,11 +163,16 @@ class IPAddrScanner(object):
             if len(self.mac_to_ip[mac]) == 0:
                 del self.mac_to_ip[mac]
 
-    def get_rpc_query_addr_result(self, macaddr):
-        try:
-            return {"result": {k: format_timestamp(v) for k, v in self.mac_to_ip[MacAddr(macaddr)].items()}}
-        except (KeyError, ValueError):
-            return {"result": {}}
+    def get_rpc_query_addr_result(self, macaddrs):
+        macaddr_split = macaddrs.split(",")
+        result = []
+        for macaddr in macaddr_split:
+            try:
+                result.append({k: format_timestamp(v) for k, v in self.mac_to_ip[MacAddr(macaddr)].items()})
+            except (KeyError, ValueError):
+                result.append(None)
+
+        return {"Result": result}
 
     def get_rpc_query_status_result(self):
         return {
@@ -183,14 +188,14 @@ class IPAddrScanner(object):
     def get_rpc_query_ip_for_mac(self, ipaddr):
         for mac, ips in self.mac_to_ip.items():
             if ipaddr in ips:
-                return {"result": {"mac": str(mac)}}
+                return {"Result": {"mac": str(mac)}}
 
-        return {"result": {}}
+        return {"Result": {}}
 
     @staticmethod
     def rpc_wol_mac(macaddr):
         from WOLSender import run as wol_send
         if wol_send(macaddr):
-            return {"result": "OK"}
+            return {"Result": "OK"}
         else:
-            return {"result": "Fail"}
+            return {"Result": "Fail"}
